@@ -15,7 +15,7 @@ export default function MapView() {
     const map = new maplibregl.Map({
       container: mapContainer.current,
       style: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
-      center: [0, 0],
+      center: [19, 46],
       zoom: 2,
     });
 

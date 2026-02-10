@@ -48,8 +48,8 @@ export const haversine = (
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos(toRadian(lat1)) *
-      Math.cos(toRadian(lat2)) *
-      Math.sin(dLon / 2) ** 2;
+    Math.cos(toRadian(lat2)) *
+    Math.sin(dLon / 2) ** 2;
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return EARTH_RADIUS * c;
@@ -239,3 +239,35 @@ export const mergeTracks = (
 
   return merged;
 };
+
+export function trackToGpx(
+  points: TrackPoint[],
+  trackName = "Merged track",
+): string {
+  const escape = (s: string) =>
+    s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+
+  const trkpts = points
+    .map((p) => {
+      const eleTag =
+        p.ele != null ? `    <ele>${p.ele}</ele>\n` : "";
+      const timeTag = `    <time>${new Date(p.time).toISOString()}</time>\n`;
+      return `  <trkpt lat="${p.lat}" lon="${p.lon}">\n${eleTag}${timeTag}  </trkpt>`;
+    })
+    .join("\n");
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="PathFuse" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <trk>
+    <name>${escape(trackName)}</name>
+    <trkseg>
+${trkpts}
+    </trkseg>
+  </trk>
+</gpx>
+`;
+}

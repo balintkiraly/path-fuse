@@ -4,33 +4,16 @@ import TrackUploader from "@/components/TrackUploader";
 import MapView from "@/components/MapView";
 import { TrackStatsPanel } from "@/components/TrackStatsPanel";
 import { TrackSimilarityPanel } from "@/components/TrackSimilarityPanel";
+import { MergedTrackPanel } from "@/components/MergedTrackPanel";
 import { useStore } from "@/lib/store";
-import { useState } from "react";
 
-import { ArrowPathIcon, MapPinIcon } from "@heroicons/react/24/solid";
+import { MapPinIcon } from "@heroicons/react/24/solid";
 
 export default function Home() {
   const tracks = useStore((state) => state.tracks);
-  const setMergedTrack = useStore((state) => state.setMergedTrack);
-  const [merging, setMerging] = useState(false);
-
-  const handleMerge = async () => {
-    setMerging(true);
-    try {
-      const res = await fetch("/api/merge-tracks", {
-        method: "POST",
-        body: JSON.stringify({ tracks: tracks.map((t) => t.points) }),
-        headers: { "Content-Type": "application/json" },
-      });
-      const data = await res.json();
-      setMergedTrack(data.merged);
-    } finally {
-      setMerging(false);
-    }
-  };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 pb-16">
       <header className="border-b border-slate-200/80 bg-white/70 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
@@ -48,28 +31,6 @@ export default function Home() {
             <section>
               <TrackUploader />
             </section>
-
-            {tracks.length > 1 && (
-              <section>
-                <button
-                  onClick={handleMerge}
-                  disabled={merging}
-                  className="inline-flex items-center gap-2 rounded-[var(--radius-button)] bg-teal-600 px-6 py-3 font-semibold text-white shadow-[var(--shadow-button)] transition-colors hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {merging ? (
-                    <>
-                      <ArrowPathIcon className="w-5 h-5 animate-spin" />
-                      Merging…
-                    </>
-                  ) : (
-                    <>
-                      <ArrowPathIcon className="w-5 h-5" />
-                      Merge tracks
-                    </>
-                  )}
-                </button>
-              </section>
-            )}
 
             <section>
               <div className="rounded-[var(--radius-card)] overflow-hidden bg-white shadow-[var(--shadow-card)] border border-slate-200/80">
@@ -93,11 +54,12 @@ export default function Home() {
                 </div>
               </div>
             </section>
+            <TrackSimilarityPanel />
           </div>
 
           <aside className="w-full lg:w-80 space-y-4 lg:sticky lg:top-24">
+            <MergedTrackPanel />
             <TrackStatsPanel />
-            <TrackSimilarityPanel />
           </aside>
         </div>
       </main>

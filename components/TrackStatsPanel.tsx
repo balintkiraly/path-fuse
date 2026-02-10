@@ -29,7 +29,7 @@
        <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-3">
          Track statistics
        </h2>
-       <div className="space-y-3 max-h-[420px] overflow-auto pr-1">
+       <div className="space-y-3 max-h-[640px] overflow-auto pr-1">
          {tracks.map((t: any) => (
            <div
              key={t.name}
