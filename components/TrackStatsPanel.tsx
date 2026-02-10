@@ -3,6 +3,8 @@
  import { useStore } from "@/lib/store";
  import {
    ArrowPathIcon,
+   ArrowTrendingDownIcon,
+   ArrowTrendingUpIcon,
    BoltIcon,
    ClockIcon,
    MapPinIcon,
@@ -17,7 +19,7 @@
          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">
            Track statistics
          </h2>
-         <p>No tracks yet. Upload GPX files to see per-track distance, duration, and speed.</p>
+         <p>No tracks yet. Upload GPX files to see distance, duration, speed, and elevation.</p>
        </aside>
      );
    }
@@ -27,7 +29,7 @@
        <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-3">
          Track statistics
        </h2>
-       <div className="space-y-3 max-h-[320px] overflow-auto pr-1">
+       <div className="space-y-3 max-h-[420px] overflow-auto pr-1">
          {tracks.map((t: any) => (
            <div
              key={t.name}
@@ -54,6 +56,22 @@
                    <BoltIcon className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
                    <span>{t.stats?.avgSpeed.toFixed(2)} km/h avg</span>
                  </li>
+                 {t.stats?.elevation && (
+                   <>
+                     <li className="flex items-center gap-1.5">
+                       <ArrowTrendingUpIcon className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                       <span>+{Math.round(t.stats.elevation.ascentM)} m</span>
+                     </li>
+                     <li className="flex items-center gap-1.5">
+                       <ArrowTrendingDownIcon className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                       <span>−{Math.round(t.stats.elevation.descentM)} m</span>
+                     </li>
+                     <li className="flex items-center gap-1.5 text-slate-500">
+                       <span className="w-3.5 text-center">↓</span>
+                       <span>{Math.round(t.stats.elevation.minM)}–{Math.round(t.stats.elevation.maxM)} m</span>
+                     </li>
+                   </>
+                 )}
                  <li className="flex items-center gap-1.5">
                    <ArrowPathIcon className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
                    <span>{t.points.length} points</span>

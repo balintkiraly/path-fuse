@@ -30,13 +30,13 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-slate-50">
       <header className="border-b border-slate-200/80 bg-white/70 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-5">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
             PathFuse
           </h1>
-          <p className="mt-1 text-slate-600 text-sm sm:text-base">
+          <p className="mt-0 text-slate-600 text-xs sm:text-base">
             Merge, clean, and visualize your GPX tracks
           </p>
         </div>
@@ -102,7 +102,7 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className="mt-16 py-6 border-t border-slate-200/80 text-center text-sm text-slate-500">
+      <footer className="bg-white mt-6 py-4 border-t border-slate-200/80 text-center text-sm text-slate-500 bottom-0 w-full absolute">
         PathFuse - merge and clean your GPX tracks
       </footer>
     </div>

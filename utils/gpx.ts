@@ -3,6 +3,35 @@ export interface TrackPoint {
   lat: number;
   lon: number;
   time: number;
+  ele?: number;
+}
+
+export interface ElevationStats {
+  ascentM: number;
+  descentM: number;
+  minM: number;
+  maxM: number;
+}
+
+export function elevationStats(
+  points: { ele?: number }[],
+): ElevationStats | null {
+  const withEle = points.filter((p) => p.ele != null) as { ele: number }[];
+  if (withEle.length === 0) return null;
+
+  let ascentM = 0;
+  let descentM = 0;
+  let minM = withEle[0].ele;
+  let maxM = withEle[0].ele;
+
+  for (let i = 1; i < withEle.length; i++) {
+    const delta = withEle[i].ele - withEle[i - 1].ele;
+    if (delta > 0) ascentM += delta;
+    else if (delta < 0) descentM += -delta;
+    if (withEle[i].ele < minM) minM = withEle[i].ele;
+    if (withEle[i].ele > maxM) maxM = withEle[i].ele;
+  }
+  return { ascentM, descentM, minM, maxM };
 }
 
 export const toRadian = (deg: number) => (deg * Math.PI) / 180;
@@ -27,7 +56,7 @@ export const haversine = (
 };
 
 export const removeOutliers = (
-  points: { lat: number; lon: number; time: number }[],
+  points: { lat: number; lon: number; time: number; ele?: number }[],
   threshold = 10,
 ) => {
   if (points.length <= 2) return points;
@@ -115,13 +144,17 @@ export const resampleTrack = (
     const t = idx - low;
 
     if (high >= points.length) {
-      resampled.push(points[low]);
+      resampled.push({ ...points[low] });
     } else {
       const lat = points[low].lat + (points[high].lat - points[low].lat) * t;
       const lon = points[low].lon + (points[high].lon - points[low].lon) * t;
       const time =
         points[low].time + (points[high].time - points[low].time) * t;
-      resampled.push({ lat, lon, time });
+      const ele =
+        points[low].ele != null && points[high].ele != null
+          ? points[low].ele! + (points[high].ele! - points[low].ele!) * t
+          : undefined;
+      resampled.push({ lat, lon, time, ele });
     }
   }
   return resampled;
@@ -132,24 +165,29 @@ export const interpolateTrack = (
   timestamp: number,
 ): TrackPoint => {
   if (points.length === 0) return { lat: 0, lon: 0, time: timestamp };
-  if (timestamp <= points[0].time) return points[0];
+  if (timestamp <= points[0].time) return { ...points[0] };
   if (timestamp >= points[points.length - 1].time)
-    return points[points.length - 1];
+    return { ...points[points.length - 1] };
 
   for (let i = 1; i < points.length; i++) {
     const prev = points[i - 1];
     const curr = points[i];
     if (timestamp <= curr.time) {
       const t = (timestamp - prev.time) / (curr.time - prev.time);
+      const ele =
+        prev.ele != null && curr.ele != null
+          ? prev.ele + (curr.ele - prev.ele) * t
+          : undefined;
       return {
         lat: prev.lat + (curr.lat - prev.lat) * t,
         lon: prev.lon + (curr.lon - prev.lon) * t,
         time: timestamp,
+        ele,
       };
     }
   }
 
-  return points[points.length - 1];
+  return { ...points[points.length - 1] };
 };
 
 export const mergeTracks = (
@@ -180,7 +218,22 @@ export const mergeTracks = (
     });
 
     if (count > 0) {
-      merged.push({ lat: latSum / count, lon: lonSum / count, time: t });
+      let eleSum = 0;
+      let eleCount = 0;
+      cleaned.forEach((track) => {
+        const pt = interpolateTrack(track, t);
+        if (pt.ele != null) {
+          eleSum += pt.ele;
+          eleCount++;
+        }
+      });
+      const ele = eleCount > 0 ? eleSum / eleCount : undefined;
+      merged.push({
+        lat: latSum / count,
+        lon: lonSum / count,
+        time: t,
+        ...(ele != null ? { ele } : {}),
+      });
     }
   }
 

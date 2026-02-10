@@ -6,6 +6,7 @@ import { xml2js } from "xml-js";
 import {
   averageSpeed,
   duration,
+  elevationStats,
   removeOutliers,
   totalDistance,
 } from "@/utils/gpx";
@@ -19,7 +20,9 @@ export default function TrackUploader() {
 
     for (const file of Array.from(e.target.files)) {
       const text = await file.text();
-      const gpxJson = xml2js(text, { compact: true });
+      const gpxJson = xml2js(text, { compact: true }) as {
+        gpx?: { trk?: { trkseg?: any }; trkseg?: any };
+      };
 
       const trk = gpxJson.gpx?.trk;
       if (!trk) continue;
@@ -40,17 +43,22 @@ export default function TrackUploader() {
           trkpts = Array.isArray(trkseg.trkpt) ? trkseg.trkpt : [trkseg.trkpt];
       }
 
-      const points = trkpts.map((pt) => ({
-        lat: parseFloat(pt._attributes.lat),
-        lon: parseFloat(pt._attributes.lon),
-        time: new Date(pt.time._text).getTime(),
-      }));
+      const points = trkpts.map((pt) => {
+        const lat = parseFloat(pt._attributes.lat);
+        const lon = parseFloat(pt._attributes.lon);
+        const time = new Date(pt.time._text).getTime();
+        const ele =
+          pt.ele?._text != null ? parseFloat(pt.ele._text) : undefined;
+        return { lat, lon, time, ...(ele != null && !Number.isNaN(ele) ? { ele } : {}) };
+      });
 
       const cleanPoints = removeOutliers(points, 10);
+      const elev = elevationStats(cleanPoints);
       const stats = {
         distanceKm: totalDistance(cleanPoints),
         durationH: duration(cleanPoints),
         avgSpeed: averageSpeed(cleanPoints),
+        ...(elev ? { elevation: elev } : {}),
       };
 
       addTrack({
@@ -72,6 +80,7 @@ export default function TrackUploader() {
         onChange={handleFiles}
         id="gpx-upload"
         aria-label="Upload GPX files"
+        className="hidden"
       />
       <label
         htmlFor="gpx-upload"
