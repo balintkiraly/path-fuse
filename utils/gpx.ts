@@ -163,8 +163,13 @@ export const resampleTrack = (
 export const interpolateTrack = (
   points: TrackPoint[],
   timestamp: number,
-): TrackPoint => {
-  if (points.length === 0) return { lat: 0, lon: 0, time: timestamp };
+  /**
+   * If provided, do not interpolate across gaps larger than this.
+   * Returns undefined for timestamps that would bridge a large gap.
+   */
+  maxGapMs?: number,
+): TrackPoint | undefined => {
+  if (points.length === 0) return undefined;
   if (timestamp <= points[0].time) return { ...points[0] };
   if (timestamp >= points[points.length - 1].time)
     return { ...points[points.length - 1] };
@@ -173,6 +178,11 @@ export const interpolateTrack = (
     const prev = points[i - 1];
     const curr = points[i];
     if (timestamp <= curr.time) {
+      const gap = curr.time - prev.time;
+      if (maxGapMs != null && gap > maxGapMs) {
+        // GPS signal likely dropped here; skip this track at this timestamp.
+        return undefined;
+      }
       const t = (timestamp - prev.time) / (curr.time - prev.time);
       const ele =
         prev.ele != null && curr.ele != null
@@ -193,11 +203,28 @@ export const interpolateTrack = (
 export const mergeTracks = (
   tracks: TrackPoint[][],
   intervalMs = 1000,
+  /**
+   * Minimum number of tracks that must contribute a point
+   * at a timestamp for it to be included in the merged result.
+   */
+  minTracks = 1,
+  /**
+   * Maximum time gap (in ms) between neighbouring points on a
+   * single track that we still consider safe to interpolate across.
+   * Bigger gaps are treated as GPS signal dropouts and ignored.
+   */
+  maxGapMs = 5 * 60 * 1000, // 5 minutes
 ): TrackPoint[] => {
   if (tracks.length === 0) return [];
 
-  const cleaned = tracks.map((t) => removeOutliers(t, 10));
+  const cleaned = tracks
+    .map((t) => removeOutliers(t, 10))
+    .filter((t) => t.length > 0);
 
+  if (cleaned.length === 0) return [];
+
+  // Merge over the full union of all track time ranges so
+  // we keep extra leading/trailing segments from individual tracks.
   const startTime = Math.min(...cleaned.map((t) => t[0].time));
   const endTime = Math.max(...cleaned.map((t) => t[t.length - 1].time));
 
@@ -207,26 +234,22 @@ export const mergeTracks = (
     let latSum = 0;
     let lonSum = 0;
     let count = 0;
+    let eleSum = 0;
+    let eleCount = 0;
 
     cleaned.forEach((track) => {
-      const pt = interpolateTrack(track, t);
-      if (pt) {
-        latSum += pt.lat;
-        lonSum += pt.lon;
-        count++;
+      const pt = interpolateTrack(track, t, maxGapMs);
+      if (!pt) return;
+      latSum += pt.lat;
+      lonSum += pt.lon;
+      count++;
+      if (pt.ele != null) {
+        eleSum += pt.ele;
+        eleCount++;
       }
     });
 
-    if (count > 0) {
-      let eleSum = 0;
-      let eleCount = 0;
-      cleaned.forEach((track) => {
-        const pt = interpolateTrack(track, t);
-        if (pt.ele != null) {
-          eleSum += pt.ele;
-          eleCount++;
-        }
-      });
+    if (count >= minTracks) {
       const ele = eleCount > 0 ? eleSum / eleCount : undefined;
       merged.push({
         lat: latSum / count,
