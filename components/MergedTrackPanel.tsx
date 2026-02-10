@@ -83,7 +83,7 @@ export function MergedTrackPanel() {
               className="peer appearance-none w-8 h-4 bg-slate-100 border border-slate-200 rounded-full checked:bg-teal-700 cursor-pointer transition-colors duration-300"
             />
             <label
-              for="switch"
+              htmlFor="switch"
               className="absolute top-[1.5px] left-[1px] w-3 h-3 bg-white rounded-full border border-slate-300 shadow-sm transition-transform duration-300 peer-checked:translate-x-[1rem] cursor-pointer"
             ></label>
           </div>
