@@ -17,8 +17,10 @@
   --radius-card: 0.75rem;
   --radius-button: 0.5rem;
   --radius-input: 0.5rem;
-  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
-  --shadow-card-hover: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+  --shadow-card:
+    0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  --shadow-card-hover:
+    0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06);
   --shadow-button: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 }
 
@@ -47,4 +49,64 @@ input[type="file"]:focus + label,
 input[type="file"]:focus-visible + label {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+.logo {
+  width: 28px;
+  height: 28px;
+  position: relative;
+}
+
+/* circles */
+.logo::before,
+.logo::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  transition: transform 0.5s ease;
+}
+
+/* blue circle */
+.logo::before {
+  width: 14px;
+  height: 14px;
+  background: #107dc8;
+  top: 0;
+  left: 0;
+  /* animate with keyframes */
+  animation: moveBefore 2s infinite cubic-bezier(0.68, -0.55, 0.265, 1.55) alternate;
+}
+
+/* green circle */
+.logo::after {
+  width: 14px;
+  height: 14px;
+  background: #20a54c;
+  bottom: 0;
+  right: 0;
+  animation: moveAfter 2s infinite cubic-bezier(0.68, -0.55, 0.265, 1.55) alternate;
+}
+
+/* center band */
+.logo .band {
+  position: absolute;
+  width: 14px;
+  height: 8px;
+  border-radius: 4px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  background: linear-gradient(90deg, #107dc8 0%, #20a54c 100%);
+}
+
+/* keyframes for blue circle */
+@keyframes moveBefore {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(10px, 10px); }
+}
+
+/* keyframes for green circle */
+@keyframes moveAfter {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(-10px, -10px); }
 }

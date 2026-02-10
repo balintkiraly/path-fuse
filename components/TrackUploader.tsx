@@ -7,6 +7,7 @@ import {
   averageSpeed,
   duration,
   elevationStats,
+  improveTrack,
   removeOutliers,
   totalDistance,
 } from "@/utils/gpx";
@@ -52,7 +53,7 @@ export default function TrackUploader() {
         return { lat, lon, time, ...(ele != null && !Number.isNaN(ele) ? { ele } : {}) };
       });
 
-      const cleanPoints = removeOutliers(points, 10);
+      const cleanPoints = improveTrack(removeOutliers(points, 10));
       const elev = elevationStats(cleanPoints);
       const stats = {
         distanceKm: totalDistance(cleanPoints),
