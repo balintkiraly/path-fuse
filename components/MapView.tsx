@@ -83,5 +83,11 @@ export default function MapView() {
     return () => map.remove();
   }, [tracks, mergedTrack]);
 
-  return <div ref={mapContainer} className="w-full h-[500px]" />;
+  return (
+    <div
+      ref={mapContainer}
+      className="w-full h-[420px]"
+      aria-label="Map showing uploaded and merged tracks"
+    />
+  );
 }

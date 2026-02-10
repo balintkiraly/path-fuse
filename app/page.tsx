@@ -1,116 +1,110 @@
 "use client";
+
 import TrackUploader from "@/components/TrackUploader";
 import MapView from "@/components/MapView";
+import { TrackStatsPanel } from "@/components/TrackStatsPanel";
+import { TrackSimilarityPanel } from "@/components/TrackSimilarityPanel";
 import { useStore } from "@/lib/store";
-import { trackSimilarity } from "@/utils/gpx";
+import { useState } from "react";
 
-import {
-  ArrowPathIcon,
-  ClockIcon,
-  MapPinIcon,
-  BoltIcon,
-  UsersIcon,
-} from "@heroicons/react/24/solid";
+import { ArrowPathIcon, MapPinIcon } from "@heroicons/react/24/solid";
 
 export default function Home() {
   const tracks = useStore((state) => state.tracks);
   const setMergedTrack = useStore((state) => state.setMergedTrack);
+  const [merging, setMerging] = useState(false);
 
   const handleMerge = async () => {
-    const res = await fetch("/api/merge-tracks", {
-      method: "POST",
-      body: JSON.stringify({ tracks: tracks.map((t) => t.points) }),
-      headers: { "Content-Type": "application/json" },
-    });
-    const data = await res.json();
-    setMergedTrack(data.merged);
+    setMerging(true);
+    try {
+      const res = await fetch("/api/merge-tracks", {
+        method: "POST",
+        body: JSON.stringify({ tracks: tracks.map((t) => t.points) }),
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      setMergedTrack(data.merged);
+    } finally {
+      setMerging(false);
+    }
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-4xl font-extrabold mb-6 text-center text-gray-800">
-        PathFuse - Merge Your GPX Tracks
-      </h1>
-
-      <div className="mb-6">
-        <TrackUploader />
-      </div>
-
-      {tracks.length > 1 && (
-        <div className="flex justify-center mb-6">
-          <button
-            className="px-6 py-3 bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition-colors duration-200"
-            onClick={handleMerge}
-          >
-            Merge Tracks
-          </button>
+    <div className="min-h-screen">
+      <header className="border-b border-slate-200/80 bg-white/70 backdrop-blur-sm sticky top-0 z-10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-5">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+            PathFuse
+          </h1>
+          <p className="mt-1 text-slate-600 text-sm sm:text-base">
+            Merge, clean, and visualize your GPX tracks
+          </p>
         </div>
-      )}
+      </header>
 
-      <div className="mb-8 shadow">
-        <MapView />
-      </div>
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
+          <div className="flex-1 space-y-8 w-full">
+            <section>
+              <TrackUploader />
+            </section>
 
-      <div className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-700">
-          Track Statistics
-        </h2>
-        <div className="grid md:grid-cols-2 gap-4">
-          {tracks.map((t: any) => (
-            <div key={t.name} className="flex shadow">
-              {/* Color Accent */}
-              <div className="w-1" style={{ backgroundColor: t.color }} />
-              <div className="flex-1 p-4">
-                <div className="font-bold text-gray-800 mb-2">{t.name}</div>
-                <div className="flex items-center gap-3 text-gray-700 text-sm mb-1">
-                  <MapPinIcon className="w-5 h-5 text-blue-600" />
-                  Distance: {t.stats?.distanceKm.toFixed(2)} km
+            {tracks.length > 1 && (
+              <section>
+                <button
+                  onClick={handleMerge}
+                  disabled={merging}
+                  className="inline-flex items-center gap-2 rounded-[var(--radius-button)] bg-teal-600 px-6 py-3 font-semibold text-white shadow-[var(--shadow-button)] transition-colors hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {merging ? (
+                    <>
+                      <ArrowPathIcon className="w-5 h-5 animate-spin" />
+                      Merging…
+                    </>
+                  ) : (
+                    <>
+                      <ArrowPathIcon className="w-5 h-5" />
+                      Merge tracks
+                    </>
+                  )}
+                </button>
+              </section>
+            )}
+
+            <section>
+              <div className="rounded-[var(--radius-card)] overflow-hidden bg-white shadow-[var(--shadow-card)] border border-slate-200/80">
+                <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+                  <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+                    Map
+                  </h2>
                 </div>
-                <div className="flex items-center gap-3 text-gray-700 text-sm mb-1">
-                  <ClockIcon className="w-5 h-5 text-yellow-600" />
-                  Duration: {t.stats?.durationH.toFixed(2)} h
-                </div>
-                <div className="flex items-center gap-3 text-gray-700 text-sm mb-1">
-                  <BoltIcon className="w-5 h-5 text-green-600" />
-                  Avg Speed: {t.stats?.avgSpeed.toFixed(2)} km/h
-                </div>
-                <div className="flex items-center gap-3 text-gray-700 text-sm">
-                  <ArrowPathIcon className="w-5 h-5 text-purple-600" />
-                  Points: {t.points.length}
+                <div className="min-h-[420px]">
+                  {tracks.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center min-h-[320px] text-slate-400">
+                      <MapPinIcon className="w-12 h-12 mb-3 opacity-60" />
+                      <p className="text-sm font-medium">No tracks yet</p>
+                      <p className="text-xs mt-0.5">
+                        Upload GPX files to see them here
+                      </p>
+                    </div>
+                  ) : (
+                    <MapView />
+                  )}
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {tracks.length > 1 && (
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4 text-gray-700">
-            Track Matching Score
-          </h2>
-          <div className="grid md:grid-cols-2 gap-3">
-            {tracks.map((t1, i) =>
-              tracks.map((t2, j) => {
-                if (i >= j) return null;
-                const score = trackSimilarity(t1.points, t2.points);
-                return (
-                  <div key={`${i}-${j}`} className="flex shadow">
-                    <div className="w-1 bg-green-500" />
-                    <div className="flex-1 p-3 flex items-center gap-3">
-                      <UsersIcon className="w-5 h-5 text-green-600" />
-                      <span className="font-semibold text-gray-800">
-                        {t1.name} ↔ {t2.name}:
-                      </span>
-                      <span className="text-blue-600">{score}%</span>
-                    </div>
-                  </div>
-                );
-              }),
-            )}
+            </section>
           </div>
+
+          <aside className="w-full lg:w-80 space-y-4 lg:sticky lg:top-24">
+            <TrackStatsPanel />
+            <TrackSimilarityPanel />
+          </aside>
         </div>
-      )}
+      </main>
+
+      <footer className="mt-16 py-6 border-t border-slate-200/80 text-center text-sm text-slate-500">
+        PathFuse - merge and clean your GPX tracks
+      </footer>
     </div>
   );
 }

@@ -9,8 +9,7 @@ import {
   removeOutliers,
   totalDistance,
 } from "@/utils/gpx";
-import { CloudArrowUpIcon } from "@heroicons/react/24/solid";
-
+import { CloudArrowUpIcon } from "@heroicons/react/24/outline";
 
 export default function TrackUploader() {
   const addTrack = useStore((state) => state.addTrack);
@@ -22,7 +21,6 @@ export default function TrackUploader() {
       const text = await file.text();
       const gpxJson = xml2js(text, { compact: true });
 
-      // Ensure trkpt exists
       const trk = gpxJson.gpx?.trk;
       if (!trk) continue;
 
@@ -31,7 +29,6 @@ export default function TrackUploader() {
 
       let trkpts: any[] = [];
       if (Array.isArray(trkseg)) {
-        // Multiple segments
         trkseg.forEach((seg: any) => {
           if (seg.trkpt)
             trkpts.push(
@@ -39,7 +36,6 @@ export default function TrackUploader() {
             );
         });
       } else {
-        // Single segment
         if (trkseg.trkpt)
           trkpts = Array.isArray(trkseg.trkpt) ? trkseg.trkpt : [trkseg.trkpt];
       }
@@ -50,7 +46,7 @@ export default function TrackUploader() {
         time: new Date(pt.time._text).getTime(),
       }));
 
-      const cleanPoints = removeOutliers(points, 10); // remove points >10 km
+      const cleanPoints = removeOutliers(points, 10);
       const stats = {
         distanceKm: totalDistance(cleanPoints),
         durationH: duration(cleanPoints),
@@ -64,30 +60,33 @@ export default function TrackUploader() {
         stats,
       });
     }
+    e.target.value = "";
   };
 
   return (
-    
-    <div className="shadow flex items-center p-4 bg-gray-50">
-      <div className="flex-shrink-0 mr-4">
-        <CloudArrowUpIcon className="w-8 h-8 text-blue-600" />
-      </div>
-
-      <div className="flex-1">
-        <label className="block text-gray-800 font-semibold mb-1">
-          Upload GPX files
-        </label>
-        <span className="text-gray-600 text-sm mb-2 block">
-          Select one or multiple GPX files
+    <div className="relative rounded-[var(--radius-card)] border-2 border-dashed border-slate-200 bg-white/80 p-8 transition-all duration-200 hover:border-teal-300 hover:bg-teal-50/50 focus-within:border-teal-500 focus-within:ring-2 focus-within:ring-teal-500/20">
+      <input
+        type="file"
+        multiple
+        accept=".gpx"
+        onChange={handleFiles}
+        id="gpx-upload"
+        aria-label="Upload GPX files"
+      />
+      <label
+        htmlFor="gpx-upload"
+        className="flex flex-col items-center justify-center gap-3 cursor-pointer text-center min-h-[120px]"
+      >
+        <span className="flex items-center justify-center w-14 h-14 rounded-full bg-teal-100 text-teal-600">
+          <CloudArrowUpIcon className="w-7 h-7" strokeWidth={1.8} />
         </span>
-        <input
-          type="file"
-          multiple
-          accept=".gpx"
-          onChange={handleFiles}
-          className="w-full border bg-white p-2 text-sm text-gray-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        />
-      </div>
+        <span className="font-semibold text-slate-800">
+          Upload GPX files
+        </span>
+        <span className="text-sm text-slate-500 max-w-sm">
+          Drag files here or click to select one or multiple .gpx files
+        </span>
+      </label>
     </div>
   );
 }
