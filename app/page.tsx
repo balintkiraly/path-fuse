@@ -15,13 +15,18 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-slate-50 pb-16">
       <header className="border-b border-slate-200/80 bg-white/70 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-            PathFuse
-          </h1>
-          <p className="mt-0 text-slate-600 text-xs sm:text-base">
-            Merge, clean, and visualize your GPX tracks
-          </p>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4  flex items-center gap-3">
+          <div className="">
+            <div className="logo" aria-hidden="true"></div>
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-700">
+              PathFuse
+            </h1>
+            <p className="mt-0 text-slate-500 text-xs sm:text-base">
+              Merge, clean, and visualize your GPX tracks
+            </p>
+          </div>
         </div>
       </header>
 
